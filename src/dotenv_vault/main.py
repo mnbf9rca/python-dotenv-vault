@@ -99,15 +99,14 @@ def parse_vault(vault_stream: io.IOBase) -> io.StringIO:
     for dotenv_key_entry in [i.strip() for i in dotenv_key.split(',')]:
         key, environment_key = parse_key(dotenv_key_entry)
 
-        ciphertext = vault.dict().get(environment_key)
+        if ciphertext := vault.dict().get(environment_key):
+            keys.append({
+                'encrypted_key': key,
+                'ciphertext': ciphertext
+            })
 
-        if not ciphertext:
+        else:
             raise DotEnvVaultError(f"NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment {environment_key} in your .env.vault file. Run 'npx dotenv-vault build' to include it.")
-
-        keys.append({
-            'encrypted_key': key,
-            'ciphertext': ciphertext
-        })
 
     # Try decrypting environments one-by-one in the order they appear
     # in the DOTENV_KEY environment variable.
